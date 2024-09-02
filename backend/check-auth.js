@@ -5,7 +5,7 @@ const router = express.Router();
 router.get('/check-auth', async (req, res) => {
   try {
     // Assuming you are using a session or a JWT token for authentication
-    const userId = req.session.userId || req.cookies.userId; // Example: retrieve from session or cookies
+    const userId = req.session.userId || req.cookies.userId; // Retrieve from session or cookies
     if (!userId) {
       return res.status(401).json({ error: 'Not authenticated' });
     }

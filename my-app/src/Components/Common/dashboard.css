@@ -1,0 +1,36 @@
+
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; 
+    background-color: #f0f0f0; 
+    font-family: Arial, sans-serif;
+    text-align: center;
+    color: #333; 
+  }
+  
+  
+  .dashboard h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    color: #2c3e50; 
+  }
+
+  .dashboard p {
+    font-size: 18px;
+    color: #7f8c8d; 
+  }
+  
+
+  .loading {
+    font-size: 24px;
+    color: #3498db; 
+    animation: fadein 1s infinite alternate; 
+  }
+  
+  @keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }

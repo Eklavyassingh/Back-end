@@ -1,85 +1,70 @@
 import React, { useState, useEffect } from 'react';
-import './LoginForm.css';
-import { FaUser, FaLock } from 'react-icons/fa';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const LoginForm = ({ isVisible, onClose }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+const Dashboard = () => {
+  const [countdown, setCountdown] = useState(0); // Countdown time in seconds
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track login status
+  const [loading, setLoading] = useState(true); // Loading state to handle async operations
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if the user is already logged in
-    const checkSession = async () => {
+    const checkLoginStatus = async () => {
       try {
-        const response = await axios.get('http://localhost:5001/api/auth/check-session');
-        if (response.data.loggedIn) {
+        const response = await fetch('/api/check-auth', {
+          method: 'GET',
+          credentials: 'include', // Include credentials (cookies) if using sessions
+        });
+        const data = await response.json();
+
+        if (response.ok && data.user) {
           setIsLoggedIn(true);
-          setTimeout(() => navigate('/dashboard'),0); // Redirect after 5 seconds
+          setCountdown(0); // Set countdown only if user is logged in
+        } else {
+          setIsLoggedIn(false);
+          navigate(''); // Redirect to login if not logged in
         }
-      } catch (err) {
-        console.error('Session check failed', err);
+      } catch (error) {
+        console.error('Error checking login status:', error);
+        setIsLoggedIn(false);
+        navigate(''); // Redirect to login on error
+      } finally {
+        setLoading(false); // Set loading to false after checking status
       }
     };
 
-    checkSession();
+    checkLoginStatus();
   }, [navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    try {
-      const response = await axios.post('http://localhost:5001/api/auth/login', { username, password });
-      alert(response.data.message);
-      setIsLoggedIn(true);
-      setTimeout(() => navigate('/dashboard'),0); // Redirect after 5 seconds
-    } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred during login');
-    }
-  };
+  useEffect(() => {
+    if (!isLoggedIn) return; // Do not start countdown if not logged in
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate('/dashboard'); // Redirect to actual dashboard or homepage
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer); // Clean up the timer on unmount
+  }, [isLoggedIn, navigate]);
+
+  if (loading) {
+    return <div>Loading...</div>; // Show loading state while checking authentication
+  }
 
   return (
-    <div className={`login-modal ${isVisible ? 'show' : ''}`}>
-      <div className="login-content">
-        <form onSubmit={handleSubmit}>
-          <button onClick={onClose} id="close-button">X</button>
-          <h1>Login</h1>
-          {error && <div className="error-message">{error}</div>}
-          <div className="input-box">
-            <input 
-              type="text" 
-              placeholder="Username" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
-              required 
-            />
-            <FaUser className="icon" />
-          </div>
-          <div className="input-box">
-            <input 
-              type="password" 
-              placeholder="Password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-            />
-            <FaLock className="icon" />
-          </div>
-          <div className="remember-forgot">
-            <label><input type="checkbox" /> Remember me</label>
-            <a href="#">Forgot Password?</a>
-          </div>
-          <button type="submit" className="loginBtn">Login</button>
-          <div className="register-link">
-            <p>Don't have an account? <a href="#">Register</a></p>
-          </div>
-        </form>
-      </div>
+    <div className="dashboard">
+      <h1>Welcome!</h1>
+      {isLoggedIn ? (
+        <p>You are being redirected to your dashboard in {countdown} seconds...</p>
+      ) : (
+        <p>Redirecting to login...</p>
+      )}
     </div>
   );
 };
 
-export default LoginForm;
+export default Dashboard;
